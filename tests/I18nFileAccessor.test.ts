@@ -5,7 +5,7 @@ import D2I from "../src/I18nFileAccessor";
 const expect = chai.expect;
 
 before((done) => {
-  D2I.register({key: "fr", path: "tests/fixtures/i18n_fr.D2I"});
+  D2I.register({key: "fr", path: "tests/fixtures/i18n_fr.d2i"});
   done();
 });
 

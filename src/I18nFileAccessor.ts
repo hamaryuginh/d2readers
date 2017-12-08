@@ -2,7 +2,6 @@ import { ByteArray } from "asdata";
 import * as fs from "fs";
 import { IEntry } from "./IEntry";
 import { IText } from "./IText";
-
 /**
  * Allow user to read d2i files
  *
@@ -10,7 +9,7 @@ import { IText } from "./IText";
  * @class I18nFileAccessor
  */
 export default class I18nFileAccessor {
-  public _container: any;
+  public static _container: any;
 
   /**
    * Register d2i files
@@ -19,7 +18,7 @@ export default class I18nFileAccessor {
    * @param {string} entry.key - used when you call get methods
    * @param {string} entry.path - full path of d2i file
    */
-  public register(...entries: IEntry[]): void {
+  public static register(...entries: IEntry[]): void {
     if (!this._container) {
       this._container = {};
     }
@@ -35,7 +34,7 @@ export default class I18nFileAccessor {
    * @param {number}
    * @param {number}
    */
-  public overrideId(key: string, idx1: number, idx2: number): void {
+  public static overrideId(key: string, idx1: number, idx2: number): void {
     this._container[key]._indexes[idx1] = this._container[key]._indexes[idx2];
     this._container[key]._unDiacriticalIndex[idx1] = this._container[key]._unDiacriticalIndex[idx2];
   }
@@ -47,7 +46,7 @@ export default class I18nFileAccessor {
    * @param {number}
    * @return {number}
    */
-  public getOrderIndex(key: string, idx: number): number {
+  public static getOrderIndex(key: string, idx: number): number {
     return this._container[key]._textSortIndex[idx];
   }
 
@@ -58,7 +57,7 @@ export default class I18nFileAccessor {
    * @param {number}
    * @return {string}
    */
-  public getText(key: string, idx: number): string {
+  public static getText(key: string, idx: number): string {
     if (!this._container[key]._indexes) {
       return null;
     }
@@ -81,7 +80,7 @@ export default class I18nFileAccessor {
    * @param {number}
    * @return {string}
    */
-  public getUnDiacriticalText(key: string, idx: number): string {
+  public static getUnDiacriticalText(key: string, idx: number): string {
     if (!this._container[key]._unDiacriticalIndex) {
       return null;
     }
@@ -103,7 +102,7 @@ export default class I18nFileAccessor {
    * @param {number} idx
    * @return {boolean}
    */
-  public hasText(key: string, idx: number): boolean {
+  public static hasText(key: string, idx: number): boolean {
     return Boolean(this._container[key]._indexes) && Boolean(this._container[key]._indexes[idx]);
   }
 
@@ -114,7 +113,7 @@ export default class I18nFileAccessor {
    * @param {string}
    * @return {string}
    */
-  public getNamedText(key: string, name: string): string {
+  public static getNamedText(key: string, name: string): string {
     if (!this._container[key]._textIndexes) {
       return null;
     }
@@ -136,7 +135,7 @@ export default class I18nFileAccessor {
    * @param {string}
    * @return {boolean}
    */
-  public hasNamedText(key: string, name: string): boolean {
+  public static hasNamedText(key: string, name: string): boolean {
     return Boolean(this._container[key]._textIndexes) && Boolean(this._container[key]._textIndexes[name]);
   }
 
@@ -146,7 +145,7 @@ export default class I18nFileAccessor {
    * @param {string}
    * @param {boolean}
    */
-  public useDirectBuffer(key: string, enableDirectBuffer: boolean): void {
+  public static useDirectBuffer(key: string, enableDirectBuffer: boolean): void {
     if (!enableDirectBuffer) {
       this._container[key]._directBuffer = null;
       return;
@@ -163,15 +162,15 @@ export default class I18nFileAccessor {
    * @param {function}
    * @return {Array}
    */
-  public getTexts(key, filter, limit = 0) {
+  public static getTexts(key: string, f?: (e: IText) => boolean, limit?: number): IText[] {
     const keys = Object.keys(this._container[key]._indexes);
     const result = [];
     for (let i = 0; i < keys.length; i++) {
-      const item = {
-        id: keys[i],
+      const item: IText = {
+        id: parseInt(keys[i], 10),
         text: this.getText(key, parseInt(keys[i], 10)),
       };
-      if (!filter || filter(item)) {
+      if (!f || f(item)) {
         result.push(item);
       }
 
@@ -190,7 +189,7 @@ export default class I18nFileAccessor {
    * @param {string}
    * @returns {Object}
    */
-  private createEntry(filename: string) {
+  private static createEntry(filename: string) {
     const entry: any = {};
     entry._directBuffer = null;
     entry._stream = new ByteArray(fs.readFileSync(filename).buffer);

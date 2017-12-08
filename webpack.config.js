@@ -41,6 +41,9 @@ module.exports = {
   resolve: {
     extensions: [".tsx", ".ts", ".js"]
   },
+  node: {
+    fs: 'empty'
+  },
   output: {
     path: path.join(__dirname, '/dist'),
     filename: outputFile,

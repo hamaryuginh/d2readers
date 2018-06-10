@@ -58,11 +58,11 @@ export default class GameDataFileAccessor {
     if (!this._container[key]._indexes) {
       return null;
     }
-    const loc3 = this._container[key]._indexes[idx];
-    if (!loc3) {
+    const pointer = this._container[key]._indexes[idx];
+    if (!pointer) {
       return null;
     }
-    this._container[key]._stream.position = loc3;
+    this._container[key]._stream.position = pointer;
     return this._container[key]._classes[this._container[key]._stream.readInt()].read(key, this._container[key]._stream);
   }
 
@@ -114,16 +114,16 @@ export default class GameDataFileAccessor {
    * @param {bytearray2}
    */
   public static readClassDefinition(key, idx, data) {
-    let loc8 = null;
-    const loc4 = data.readUTF();
-    const loc5 = data.readUTF();
-    const classDefinition = new GameDataClassDefinition(loc5, loc4);
-    const loc7 = data.readInt();
-    let loc10 = 0;
-    while (loc10 < loc7) {
-      loc8 = data.readUTF();
-      classDefinition.addField(key, loc8, data);
-      loc10++;
+    let fieldName = null;
+    const className = data.readUTF();
+    const packageName = data.readUTF();
+    const classDefinition = new GameDataClassDefinition(packageName, className);
+    const fieldsCount = data.readInt();
+    let i = 0;
+    while (i < fieldsCount) {
+      fieldName = data.readUTF();
+      classDefinition.addField(key, fieldName, data);
+      i++;
     }
     this._container[key]._classes[idx] = classDefinition;
   }
@@ -139,52 +139,52 @@ export default class GameDataFileAccessor {
     this._container[key] = entry;
     entry._stream = new ByteArray(fs.readFileSync(filename).buffer);
     entry._streamStartIndex = 7;
-    let loc8 = 0;
-    let loc9 = 0;
-    let loc14 = 0;
-    let loc17 = 0;
+    let indexKey = 0;
+    let pointer = 0;
+    let classIdentifier = 0;
+    let len = 0;
     entry._indexes = {};
     entry._length = 0;
     entry._classes = {};
-    let loc4 = 0;
-    let loc5 = entry._stream.readMultiByte(3, "ASCII");
-    if (loc5 !== "D2O") {
+    let contentOffset = 0;
+    let headers = entry._stream.readMultiByte(3, "ASCII");
+    if (headers !== "D2O") {
       entry._stream.clear();
       try {
-        loc5 = entry._stream.readUTF();
+        headers = entry._stream.readUTF();
       } catch (e) {
         //
       }
-      if (loc5 !== ANKAMA_SIGNED_FILE_HEADER) {
+      if (headers !== ANKAMA_SIGNED_FILE_HEADER) {
         throw new Error("Malformated game data file.");
       }
       entry._stream.readShort();
-      loc17 = entry._stream.readInt();
-      entry._stream.position += loc17;
-      loc4 = entry._stream.position;
-      entry._streamStartIndex = loc4 + 7;
-      loc5 = entry._stream.readMultiByte(3, "ASCII");
-      if (loc5 !== "D2O") {
+      len = entry._stream.readInt();
+      entry._stream.position += len;
+      contentOffset = entry._stream.position;
+      entry._streamStartIndex = contentOffset + 7;
+      headers = entry._stream.readMultiByte(3, "ASCII");
+      if (headers !== "D2O") {
         throw new Error("Malformated game data file.");
       }
     }
-    const loc6 = entry._stream.readInt();
-    entry._stream.position = loc4 + loc6;
-    const loc7 = entry._stream.readInt();
-    let loc11 = 0;
-    while (loc11 < loc7) {
-      loc8 = entry._stream.readInt();
-      loc9 = entry._stream.readInt();
-      entry._indexes[loc8] = loc4 + loc9;
+    const indexesPointer = entry._stream.readInt();
+    entry._stream.position = contentOffset + indexesPointer;
+    const indexesLength = entry._stream.readInt();
+    let i = 0;
+    while (i < indexesLength) {
+      indexKey = entry._stream.readInt();
+      pointer = entry._stream.readInt();
+      entry._indexes[indexKey] = contentOffset + pointer;
       entry._length++;
-      loc11 += 8;
+      i += 8;
     }
-    const loc13 = entry._stream.readInt();
-    let loc15 = 0;
-    while (loc15 < loc13) {
-      loc14 = entry._stream.readInt();
-      this.readClassDefinition(key, loc14, entry._stream);
-      loc15++;
+    const classesCount = entry._stream.readInt();
+    let j = 0;
+    while (j < classesCount) {
+      classIdentifier = entry._stream.readInt();
+      this.readClassDefinition(key, classIdentifier, entry._stream);
+      j++;
     }
   }
 }

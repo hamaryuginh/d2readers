@@ -142,11 +142,11 @@ export default class GameDataField {
    * @returns {Object}
    */
   public readString(data: ByteArray) {
-    let loc4 = data.readUTF();
-    if (loc4 === "null") {
-      loc4 = null;
+    let result = data.readUTF();
+    if (result === "null") {
+      result = null;
     }
-    return loc4;
+    return result;
   }
 
   /**

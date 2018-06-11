@@ -9,6 +9,7 @@ before((done) => {
     { key: "mounts", path: "tests/fixtures/Mounts.d2o" },
     { key: "dungeons", path: "tests/fixtures/Dungeons.d2o" },
     { key: "items", path: "tests/fixtures/Items.d2o" },
+    { key: "hintCategories", path: "tests/fixtures/HintCategory.d2o" },
     { key: "itemSets", path: "tests/fixtures/ItemSets.d2o" },
   );
   done();
@@ -20,11 +21,17 @@ describe("GameDataFileAccessor", () => {
     expect(D2O._container["dungeons"]._length).greaterThan(0);
     expect(D2O._container["items"]._length).greaterThan(0);
     expect(D2O._container["itemSets"]._length).greaterThan(0);
+    expect(D2O._container["hintCategories"]._length).greaterThan(0);
   });
   it("should get object!", () => {
     const mount: any = D2O.getObject("mounts", 41);
     const res = expect(mount).to.exist;
     expect(mount.nameId).equal(59093);
+  });
+  it("should get object bis!", () => {
+    const hintCategory: any = D2O.getObject("hintCategories", 9);
+    const res = expect(hintCategory).to.exist;
+    expect(hintCategory.nameId).equal(323562);
   });
   it("should get objects!", () => {
     const mounts: any[] = D2O.getObjects("mounts", null, 25);

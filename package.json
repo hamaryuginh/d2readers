@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yovanoc/d2readers.git"
+    "url": "git+https://github.com/yovanoc/d2readers-ts.git"
   },
   "keywords": [
     "typescript",
@@ -27,9 +27,9 @@
   "author": "Christopher Yovanovitch <yovano_c@outlook.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yovanoc/d2readers/issues"
+    "url": "https://github.com/yovanoc/d2readers-ts/issues"
   },
-  "homepage": "https://github.com/yovanoc/d2readers#readme",
+  "homepage": "https://github.com/yovanoc/d2readers-ts#readme",
   "devDependencies": {
     "@types/chai": "^4.0.8",
     "@types/mocha": "^2.2.44",

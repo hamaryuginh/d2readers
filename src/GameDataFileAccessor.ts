@@ -137,7 +137,8 @@ export default class GameDataFileAccessor {
   private static createEntry(key: string, filename: string) {
     const entry: any = {};
     this._container[key] = entry;
-    entry._stream = new ByteArray(fs.readFileSync(filename).buffer);
+    const fileBuffer = fs.readFileSync(filename);
+    entry._stream = new ByteArray(fileBuffer.buffer, fileBuffer.byteOffset, fileBuffer.byteLength);
     entry._streamStartIndex = 7;
     let indexKey = 0;
     let pointer = 0;

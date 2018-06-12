@@ -1,17 +1,4 @@
 const path = require('path');
-const webpack = require('webpack');
-const yargs = require('yargs');
-
-let libraryName = 'd2readers',
-  plugins = [],
-  outputFile;
-
-if (yargs.argv.p) {
-  plugins.push(new webpack.optimize.UglifyJsPlugin({minimize: true, sourceMap: true}));
-  outputFile = libraryName + '.min.js';
-} else {
-  outputFile = libraryName + '.js';
-}
 
 module.exports = {
   entry: './src/index.ts',
@@ -44,10 +31,9 @@ module.exports = {
   target: "node",
   output: {
     path: path.join(__dirname, '/dist'),
-    filename: outputFile,
-    library: libraryName,
+    library: "d2readers",
     libraryTarget: 'umd',
     umdNamedDefine: true
   },
-  plugins: plugins
+  plugins: []
 };

@@ -11,7 +11,12 @@ const NULL_IDENTIFIER = -1431655766;
  * @class GameDataField
  */
 export default class GameDataField {
-  public readData: (data: ByteArray, key: string, type?: number, innerReadMethods?: any) => any;
+  public readData: (
+    data: ByteArray,
+    key: string,
+    type?: number,
+    innerReadMethods?: any
+  ) => any;
   private _innerReadMethods: any[];
   private _innerTypeNames: string[];
   /**
@@ -63,7 +68,9 @@ export default class GameDataField {
           this._innerTypeNames = [];
         }
         this._innerTypeNames.push(data.readUTF());
-        this._innerReadMethods.unshift(this.getReadMethod(key, data.readInt(), data));
+        this._innerReadMethods.unshift(
+          this.getReadMethod(key, data.readInt(), data)
+        );
         return this.readVector;
       default:
         if (type > 0) {

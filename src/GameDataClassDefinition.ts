@@ -55,7 +55,7 @@ export default class GameDataClassDefinition {
    */
   private read(key: string, data: ByteArray) {
     const _definition = {};
-    this._fields.forEach((field) => {
+    this._fields.forEach(field => {
       _definition[field.name] = field.readData(data, key);
     });
 

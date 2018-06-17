@@ -22,8 +22,8 @@ export default class I18nFileAccessor {
     if (!this._container) {
       this._container = {};
     }
-    for (let i = 0; i < arguments.length; i++) {
-      this._container[arguments[i].key] = this.createEntry(arguments[i].path);
+    for (const arg of entries) {
+      this._container[arg.key] = this.createEntry(arg.path);
     }
   }
 
@@ -36,7 +36,9 @@ export default class I18nFileAccessor {
    */
   public static overrideId(key: string, idx1: number, idx2: number): void {
     this._container[key]._indexes[idx1] = this._container[key]._indexes[idx2];
-    this._container[key]._unDiacriticalIndex[idx1] = this._container[key]._unDiacriticalIndex[idx2];
+    this._container[key]._unDiacriticalIndex[idx1] = this._container[
+      key
+    ]._unDiacriticalIndex[idx2];
   }
 
   /**
@@ -103,7 +105,10 @@ export default class I18nFileAccessor {
    * @return {boolean}
    */
   public static hasText(key: string, idx: number): boolean {
-    return Boolean(this._container[key]._indexes) && Boolean(this._container[key]._indexes[idx]);
+    return (
+      Boolean(this._container[key]._indexes) &&
+      Boolean(this._container[key]._indexes[idx])
+    );
   }
 
   /**
@@ -136,7 +141,10 @@ export default class I18nFileAccessor {
    * @return {boolean}
    */
   public static hasNamedText(key: string, name: string): boolean {
-    return Boolean(this._container[key]._textIndexes) && Boolean(this._container[key]._textIndexes[name]);
+    return (
+      Boolean(this._container[key]._textIndexes) &&
+      Boolean(this._container[key]._textIndexes[name])
+    );
   }
 
   /**
@@ -145,7 +153,10 @@ export default class I18nFileAccessor {
    * @param {string}
    * @param {boolean}
    */
-  public static useDirectBuffer(key: string, enableDirectBuffer: boolean): void {
+  public static useDirectBuffer(
+    key: string,
+    enableDirectBuffer: boolean
+  ): void {
     if (!enableDirectBuffer) {
       this._container[key]._directBuffer = null;
       return;
@@ -162,13 +173,17 @@ export default class I18nFileAccessor {
    * @param {function}
    * @return {Array}
    */
-  public static getTexts(key: string, f?: (e: IText) => boolean, limit?: number): IText[] {
+  public static getTexts(
+    key: string,
+    f?: (e: IText) => boolean,
+    limit?: number
+  ): IText[] {
     const keys = Object.keys(this._container[key]._indexes);
     const result = [];
-    for (let i = 0; i < keys.length; i++) {
+    for (const k of keys) {
       const item: IText = {
-        id: parseInt(keys[i], 10),
-        text: this.getText(key, parseInt(keys[i], 10)),
+        id: parseInt(k, 10),
+        text: this.getText(key, parseInt(k, 10))
       };
       if (!f || f(item)) {
         result.push(item);
@@ -230,7 +245,7 @@ export default class I18nFileAccessor {
       value = entry._stream.readInt();
       entry._textCount++;
       entry._textIndexes[key] = value;
-      m -= (entry._stream.position - position);
+      m -= entry._stream.position - position;
     }
 
     m = entry._stream.readInt();
@@ -239,7 +254,7 @@ export default class I18nFileAccessor {
     while (m > 0) {
       position = entry._stream.position;
       entry._textSortIndex[entry._stream.readInt()] = ++i;
-      m -= (entry._stream.position - position);
+      m -= entry._stream.position - position;
     }
 
     return entry;

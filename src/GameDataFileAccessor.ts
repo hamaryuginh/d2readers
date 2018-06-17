@@ -21,8 +21,8 @@ export default class GameDataFileAccessor {
     if (!this._container) {
       this._container = {};
     }
-    for (let i = 0; i < arguments.length; i++) {
-      this.createEntry(arguments[i].key, arguments[i].path);
+    for (const arg of entries) {
+      this.createEntry(arg.key, arg.path);
     }
   }
 
@@ -63,7 +63,9 @@ export default class GameDataFileAccessor {
       return null;
     }
     this._container[key]._stream.position = pointer;
-    return this._container[key]._classes[this._container[key]._stream.readInt()].read(key, this._container[key]._stream);
+    return this._container[key]._classes[
+      this._container[key]._stream.readInt()
+    ].read(key, this._container[key]._stream);
   }
 
   /**
@@ -75,14 +77,23 @@ export default class GameDataFileAccessor {
    * @param {function}
    * @returns {Array<Object>}
    */
-  public static getObjects<T>(key: string, f?: (e: T) => boolean, limit?: number, map?: (e: any) => T): T[] {
+  public static getObjects<T>(
+    key: string,
+    f?: (e: T) => boolean,
+    limit?: number,
+    map?: (e: any) => T
+  ): T[] {
     if (!this._container[key]._length) {
       return null;
     }
-    this._container[key]._stream.position = this._container[key]._streamStartIndex;
+    this._container[key]._stream.position = this._container[
+      key
+    ]._streamStartIndex;
     const result = [];
     for (let i = 0; i < this._container[key]._length; i++) {
-      const item = this._container[key]._classes[this._container[key]._stream.readInt()].read(key, this._container[key]._stream);
+      const item = this._container[key]._classes[
+        this._container[key]._stream.readInt()
+      ].read(key, this._container[key]._stream);
       if (!f || f(item)) {
         result.push(map ? map(item) : item);
       }
@@ -138,7 +149,11 @@ export default class GameDataFileAccessor {
     const entry: any = {};
     this._container[key] = entry;
     const fileBuffer = fs.readFileSync(filename);
-    entry._stream = new ByteArray(fileBuffer.buffer, fileBuffer.byteOffset, fileBuffer.byteLength);
+    entry._stream = new ByteArray(
+      fileBuffer.buffer,
+      fileBuffer.byteOffset,
+      fileBuffer.byteLength
+    );
     entry._streamStartIndex = 7;
     let indexKey = 0;
     let pointer = 0;

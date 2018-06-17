@@ -4,8 +4,8 @@ import D2I from "../src/I18nFileAccessor";
 
 const expect = chai.expect;
 
-before((done) => {
-  D2I.register({key: "fr", path: "tests/fixtures/i18n_fr.d2i"});
+before(done => {
+  D2I.register({ key: "fr", path: "tests/fixtures/i18n_fr.d2i" });
   done();
 });
 
@@ -58,6 +58,12 @@ describe("I18nFileAccessor", () => {
   });
   it("should get texts!", () => {
     expect(D2I.getTexts("fr", null, 5).length).equal(5);
-    expect(D2I.getTexts("fr", (e) => e.text.indexOf("Dragodinde") > -1 && e.text.length < 40, 1)[0].text.indexOf("Dragodinde")).not.equal(-1);
+    expect(
+      D2I.getTexts(
+        "fr",
+        e => e.text.indexOf("Dragodinde") > -1 && e.text.length < 40,
+        1
+      )[0].text.indexOf("Dragodinde")
+    ).not.equal(-1);
   });
 });

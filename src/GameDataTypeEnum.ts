@@ -5,5 +5,5 @@ export enum GameDataTypeEnum {
   NUMBER = -4,
   I18N = -5,
   UINT = -6,
-  VECTOR = -99,
+  VECTOR = -99
 }

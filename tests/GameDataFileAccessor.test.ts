@@ -49,4 +49,13 @@ describe("GameDataFileAccessor", () => {
     expect(items[5]).equal("Puissante Epée d'Alle");
     expect(itemSets[58]).equal("Panoplie du Piou Bleu");
   });
+  it("should get class definition", () => {
+    const classDefinition: any = D2O.getClassDefinition("items", 5);
+    const assert = expect(classDefinition).to.not.be.undefined;
+  });
+  it("should get all class definitions of a d2o!", () => {
+    const classDefinitions: any = D2O.getClassDefinitions("items");
+    const definitionKeys = Object.keys(classDefinitions);
+    expect(definitionKeys.length).to.be.greaterThan(1);
+  });
 });

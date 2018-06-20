@@ -11,14 +11,9 @@ const NULL_IDENTIFIER = -1431655766;
  * @class GameDataField
  */
 export default class GameDataField {
-  public readData: (
-    data: ByteArray,
-    key: string,
-    type?: number,
-    innerReadMethods?: any
-  ) => any;
-  private _innerReadMethods: any[];
-  private _innerTypeNames: string[];
+  public readData: (data: ByteArray, key: string) => any;
+  public type: GameDataTypeEnum;
+  public innerField: GameDataField;
   /**
    * Creates an instance of GameDataField.
    *
@@ -36,7 +31,9 @@ export default class GameDataField {
    * @param {ByteArray}
    */
   public readType(key: string, data: ByteArray) {
-    this.readData = this.getReadMethod(key, data.readInt(), data);
+    const gameDataType: GameDataTypeEnum = data.readInt();
+    this.type = gameDataType;
+    this.readData = this.getReadMethod(key, gameDataType, data);
   }
 
   /**
@@ -63,14 +60,8 @@ export default class GameDataField {
       case GameDataTypeEnum.UINT:
         return this.readUnsignedInteger;
       case GameDataTypeEnum.VECTOR:
-        if (!this._innerReadMethods) {
-          this._innerReadMethods = [];
-          this._innerTypeNames = [];
-        }
-        this._innerTypeNames.push(data.readUTF());
-        this._innerReadMethods.unshift(
-          this.getReadMethod(key, data.readInt(), data)
-        );
+        this.innerField = new GameDataField(data.readUTF());
+        this.innerField.readType(key, data);
         return this.readVector;
       default:
         if (type > 0) {
@@ -86,20 +77,17 @@ export default class GameDataField {
    * @private
    * @param {ByteArray}
    * @param {string}
-   * @param {number} [type=0]
-   * @param innerReadMethods {Function}
    * @returns {Array<Object>}
    */
-  public readVector(data: ByteArray, key: string, type = 0, innerReadMethods) {
-    const loc4 = data.readInt();
-    const loc6 = [];
-    let loc7 = 0;
-    innerReadMethods = innerReadMethods || this._innerReadMethods;
-    while (loc7 < loc4) {
-      loc6.push(innerReadMethods[type](data, key, type + 1, innerReadMethods));
-      loc7++;
+  public readVector(data: ByteArray, key: string) {
+    const vectorLen = data.readInt();
+    const vector = [];
+    let i = 0;
+    while (i < vectorLen) {
+      vector.push(this.innerField.readData(data, key));
+      i++;
     }
-    return loc6;
+    return vector;
   }
 
   /**

@@ -25,7 +25,15 @@ export default class GameDataFileAccessor {
       this.createEntry(arg.key, arg.path);
     }
   }
-
+  /**
+   * Get all class definitions inside a .d2o
+   *
+   * @param {string}
+   * @returns {Object}
+   */
+  public static getClassDefinitions(key: string): any {
+    return this._container[key]._classes;
+  }
   /**
    * Get class definition by index
    *

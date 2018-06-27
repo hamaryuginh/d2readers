@@ -1,23 +1,26 @@
 import { ByteArray } from "asdata";
-import D2O from "./GameDataFileAccessor";
+import GameDataClassDefinition from "./GameDataClassDefinition";
 import { GameDataTypeEnum } from "./GameDataTypeEnum";
 
 const NULL_IDENTIFIER = -1431655766;
 
 /**
  * Field of Class definition
- *
- * @private
+ * @export
  * @class GameDataField
  */
 export default class GameDataField {
-  public readData: (data: ByteArray, key: string) => any;
+  public readData: (
+    data: ByteArray,
+    classes: Map<number, GameDataClassDefinition>
+  ) => any;
   public type: GameDataTypeEnum;
   public innerField: GameDataField;
+
   /**
    * Creates an instance of GameDataField.
-   *
-   * @param {string}
+   * @param {string} name
+   * @memberof GameDataField
    */
   constructor(public name: string) {
     //
@@ -25,27 +28,22 @@ export default class GameDataField {
 
   /**
    * Read type of field
-   *
-   * @private
-   * @param {string}
-   * @param {ByteArray}
+   * @param {ByteArray} data
+   * @memberof GameDataField
    */
-  public readType(key: string, data: ByteArray) {
+  public readType(data: ByteArray): void {
     const gameDataType: GameDataTypeEnum = data.readInt();
     this.type = gameDataType;
-    this.readData = this.getReadMethod(key, gameDataType, data);
+    this.readData = this.getReadMethod(gameDataType, data);
   }
 
   /**
    * Read method
-   *
-   * @private
-   * @param {string}
-   * @param {GameDataTypeEnum}
-   * @param {ByteArray}
-   * @returns {Function}
+   * @param {GameDataTypeEnum} type
+   * @param {ByteArray} data
+   * @memberof GameDataField
    */
-  public getReadMethod(key: string, type: GameDataTypeEnum, data: ByteArray) {
+  public getReadMethod(type: GameDataTypeEnum, data: ByteArray) {
     switch (type) {
       case GameDataTypeEnum.INT:
         return this.readInteger;
@@ -61,7 +59,7 @@ export default class GameDataField {
         return this.readUnsignedInteger;
       case GameDataTypeEnum.VECTOR:
         this.innerField = new GameDataField(data.readUTF());
-        this.innerField.readType(key, data);
+        this.innerField.readType(data);
         return this.readVector;
       default:
         if (type > 0) {
@@ -73,18 +71,20 @@ export default class GameDataField {
 
   /**
    * Read list
-   *
-   * @private
-   * @param {ByteArray}
-   * @param {string}
-   * @returns {Array<Object>}
+   * @param {ByteArray} data
+   * @param {Map<number,GameDataClassDefinition>} classes
+   * @returns {any[]}
+   * @memberof GameDataField
    */
-  public readVector(data: ByteArray, key: string) {
+  public readVector(
+    data: ByteArray,
+    classes: Map<number, GameDataClassDefinition>
+  ): any[] {
     const vectorLen = data.readInt();
     const vector = [];
     let i = 0;
     while (i < vectorLen) {
-      vector.push(this.innerField.readData(data, key));
+      vector.push(this.innerField.readData(data, classes));
       i++;
     }
     return vector;
@@ -92,51 +92,50 @@ export default class GameDataField {
 
   /**
    * Read Object
-   *
-   * @private
-   * @param {ByteArray}
-   * @param {string}
-   * @returns {Object}
+   * @param {ByteArray} data
+   * @param {Map<number,GameDataClassDefinition>} classes
+   * @returns {object}
+   * @memberof GameDataField
    */
-  public readObject(data: ByteArray, key: string) {
-    const loc4 = data.readInt();
-    if (loc4 === NULL_IDENTIFIER) {
+  public readObject(
+    data: ByteArray,
+    classes: Map<number, GameDataClassDefinition>
+  ): object {
+    const classId = data.readInt();
+    if (classId === NULL_IDENTIFIER) {
       return null;
     }
-    const loc5 = D2O.getClassDefinition(key, loc4);
-    return loc5.read(key, data);
+    const classDefinition = classes.get(classId);
+    return classDefinition.read(data, classes);
   }
 
   /**
    * Read Integer
-   *
-   * @private
-   * @param {ByteArray}
-   * @returns {Object}
+   * @param {ByteArray} data
+   * @returns {number}
+   * @memberof GameDataField
    */
-  public readInteger(data: ByteArray) {
+  public readInteger(data: ByteArray): number {
     return data.readInt();
   }
 
   /**
-   * Read BOOLEAN
-   *
-   * @private
-   * @param {ByteArray}
-   * @returns {Object}
+   * Read Boolean
+   * @param {ByteArray} data
+   * @returns {boolean}
+   * @memberof GameDataField
    */
-  public readBoolean(data: ByteArray) {
+  public readBoolean(data: ByteArray): boolean {
     return data.readBoolean();
   }
 
   /**
    * Read String
-   *
-   * @private
-   * @param {ByteArray}
-   * @returns {Object}
+   * @param {ByteArray} data
+   * @returns {string}
+   * @memberof GameDataField
    */
-  public readString(data: ByteArray) {
+  public readString(data: ByteArray): string {
     let result = data.readUTF();
     if (result === "null") {
       result = null;
@@ -146,34 +145,31 @@ export default class GameDataField {
 
   /**
    * Read Number
-   *
-   * @private
-   * @param {ByteArray}
-   * @returns {Object}
+   * @param {ByteArray} data
+   * @returns {number}
+   * @memberof GameDataField
    */
-  public readNumber(data: ByteArray) {
+  public readNumber(data: ByteArray): number {
     return data.readDouble();
   }
 
   /**
-   * ReadI18n ID
-   *
-   * @private
-   * @param {ByteArray}
-   * @returns {Object}
+   * Read I18n ID
+   * @param {ByteArray} data
+   * @returns {number}
+   * @memberof GameDataField
    */
-  public readI18n(data: ByteArray) {
+  public readI18n(data: ByteArray): number {
     return data.readInt();
   }
 
   /**
    * Read Unsigned integer
-   *
-   * @private
-   * @param {ByteArray}
-   * @returns {Object}
+   * @param {ByteArray} data
+   * @returns {number}
+   * @memberof GameDataField
    */
-  public readUnsignedInteger(data: ByteArray) {
+  public readUnsignedInteger(data: ByteArray): number {
     return data.readUnsignedInt();
   }
 }

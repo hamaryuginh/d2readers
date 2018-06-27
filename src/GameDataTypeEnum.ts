@@ -1,3 +1,7 @@
+/**
+ * @export
+ * @enum {number}
+ */
 export enum GameDataTypeEnum {
   INT = -1,
   BOOLEAN = -2,

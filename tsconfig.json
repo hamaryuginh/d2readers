@@ -1,9 +1,18 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es5",
+    "target": "es6",
     "sourceMap": true,
-    "declaration": true
+    "declaration": true,
+    "lib": [
+      "es6",
+      "es2016.array.include",
+      "es2017.object"
+    ],
+    "baseUrl": "./src",
+    "paths": {
+      "@datacenter/*": ["datacenter/*"]
+    }
   },
   "include": [
     "src/**/*"

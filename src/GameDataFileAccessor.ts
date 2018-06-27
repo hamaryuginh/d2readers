@@ -1,9 +1,6 @@
-import { ByteArray } from "asdata";
 import * as fs from "fs";
-import GameDataClassDefinition from "./GameDataClassDefinition";
-import { IEntry } from "./IEntry";
-
-const ANKAMA_SIGNED_FILE_HEADER = "AKSF";
+import * as path from "path";
+import D2oReader from "./D2oReader";
 
 /**
  * Allow user to read d2o files
@@ -12,203 +9,139 @@ const ANKAMA_SIGNED_FILE_HEADER = "AKSF";
  * @class GameDataFileAccessor
  */
 export default class GameDataFileAccessor {
-  public static _container: any;
-
   /**
-   * Register all d2o files
+   * Must be called before anything
+   * @static
+   * @param {string} d2oFilesPath
+   * @memberof GameDataFileAccessor
    */
-  public static register(...entries: IEntry[]): void {
-    if (!this._container) {
-      this._container = {};
-    }
-    for (const arg of entries) {
-      this.createEntry(arg.key, arg.path);
-    }
-  }
-  /**
-   * Get all class definitions inside a .d2o
-   *
-   * @param {string}
-   * @returns {Object}
-   */
-  public static getClassDefinitions(key: string): any {
-    return this._container[key]._classes;
-  }
-  /**
-   * Get class definition by index
-   *
-   * @param {string}
-   * @param {number}
-   * @returns {Object}
-   */
-  public static getClassDefinition(key: string, idx: number): any {
-    return this._container[key]._classes[idx];
+  public static init(d2oFilesPath: string): void {
+    this.d2oFilesPath = d2oFilesPath;
+    this.loadReaders();
   }
 
   /**
-   * Get d2o items length
-   *
-   * @param {string}
-   * @returns {number}
+   * Get object from d2o file
+   * @static
+   * @template T
+   * @param {{ new (): T }} klass
+   * @param {number} idx
+   * @returns {T}
+   * @memberof GameDataFileAccessor
    */
-  public static getlength(key) {
-    return this._container[key]._length;
-  }
+  public static getObject<T>(klass: { new (): T }, idx: number): T {
+    const reader: D2oReader = this._readers.get(klass.name);
 
-  /**
-   * Get object by index
-   *
-   * @param {string}
-   * @param {number}
-   * @returns {Object}
-   */
-  public static getObject<T>(key: string, idx: number): T {
-    if (!this._container[key]._indexes) {
-      return null;
-    }
-    const pointer = this._container[key]._indexes[idx];
-    if (!pointer) {
-      return null;
-    }
-    this._container[key]._stream.position = pointer;
-    return this._container[key]._classes[
-      this._container[key]._stream.readInt()
-    ].read(key, this._container[key]._stream);
+    return reader.readObject<T>(klass, idx);
   }
 
   /**
    * Get objects from d2o file
-   *
-   * @param {string}
-   * @param {function}
-   * @param {number} [limit=0]
-   * @param {function}
-   * @returns {Array<Object>}
+   * @static
+   * @template T
+   * @template A
+   * @param {new () => T} klass
+   * @param {(e: T) => boolean} [f]
+   * @param {number} [limit]
+   * @param {(e: T) => A} [map]
+   * @returns {T[]}
+   * @memberof GameDataFileAccessor
    */
-  public static getObjects<T>(
-    key: string,
+  public static getObjects<T, A>(
+    klass: new () => T,
     f?: (e: T) => boolean,
     limit?: number,
-    map?: (e: any) => T
+    map?: (e: T) => A
   ): T[] {
-    if (!this._container[key]._length) {
-      return null;
-    }
-    this._container[key]._stream.position = this._container[
-      key
-    ]._streamStartIndex;
-    const result = [];
-    for (let i = 0; i < this._container[key]._length; i++) {
-      const item = this._container[key]._classes[
-        this._container[key]._stream.readInt()
-      ].read(key, this._container[key]._stream);
-      if (!f || f(item)) {
-        result.push(map ? map(item) : item);
-      }
+    const reader: D2oReader = this._readers.get(klass.name);
 
-      if (limit !== 0 && result.length >= limit) {
-        break;
-      }
-    }
-    return result;
+    return reader.readObjects<T, A>(klass, f, limit, map); // Todo: how to reuturn A[] and not T[] if map is provided
   }
 
   /**
    * Mapping of objects as you wanted
-   *
-   * @param {string}
-   * @param cb {function}
-   * @returns {Array<Object>}
+   * @static
+   * @template T
+   * @template A
+   * @param {{ new (): T }} klass
+   * @param {(e: T) => A} m
+   * @returns {A[]}
+   * @memberof GameDataFileAccessor
    */
-  public static map<T>(key: string, m: (e: any) => T): T[] {
-    return this.getObjects(key, null, 0, m);
+  public static map<T, A>(klass: { new (): T }, m: (e: T) => A): A[] {
+    return (this.getObjects<T, A>(klass, null, 0, m) as any) as A[]; // Todo: find another way without any cast
   }
 
   /**
-   * Read class definition from d2o file
-   *
+   * List of classNames present in different .d2o files
    * @private
-   * @param {string}
-   * @param {number}
-   * @param {bytearray2}
+   * @static
+   * @type {string[]}
+   * @memberof GameDataFileAccessor
    */
-  public static readClassDefinition(key, idx, data) {
-    let fieldName = null;
-    const className = data.readUTF();
-    const packageName = data.readUTF();
-    const classDefinition = new GameDataClassDefinition(packageName, className);
-    const fieldsCount = data.readInt();
-    let i = 0;
-    while (i < fieldsCount) {
-      fieldName = data.readUTF();
-      classDefinition.addField(key, fieldName, data);
-      i++;
-    }
-    this._container[key]._classes[idx] = classDefinition;
-  }
+  private static _ignoredClasses: string[] = [];
+
   /**
-   * Create d2o entry from filename
-   *
+   * Map of className => D2oReader
    * @private
-   * @param {string}
-   * @param {string}
+   * @static
+   * @type {Map<string, D2oReader>}
+   * @memberof GameDataFileAccessor
    */
-  private static createEntry(key: string, filename: string) {
-    const entry: any = {};
-    this._container[key] = entry;
-    const fileBuffer = fs.readFileSync(filename);
-    entry._stream = new ByteArray(
-      fileBuffer.buffer,
-      fileBuffer.byteOffset,
-      fileBuffer.byteLength
-    );
-    entry._streamStartIndex = 7;
-    let indexKey = 0;
-    let pointer = 0;
-    let classIdentifier = 0;
-    let len = 0;
-    entry._indexes = {};
-    entry._length = 0;
-    entry._classes = {};
-    let contentOffset = 0;
-    let headers = entry._stream.readMultiByte(3, "ASCII");
-    if (headers !== "D2O") {
-      entry._stream.clear();
-      try {
-        headers = entry._stream.readUTF();
-      } catch (e) {
-        //
+  private static _readers: Map<string, D2oReader> = new Map<
+    string,
+    D2oReader
+  >();
+
+  /**
+   * Must be provided in init()
+   * @private
+   * @static
+   * @type {string}
+   * @memberof GameDataFileAccessor
+   */
+  private static d2oFilesPath: string;
+
+  /**
+   * Creates the D2oReaders for every .d2o file in the d2oFilesPath dir.
+   * @private
+   * @static
+   * @memberof GameDataFileAccessor
+   */
+  private static loadReaders(): void {
+    const d2oFiles = fs
+      .readdirSync(this.d2oFilesPath)
+      .filter(file => file.endsWith(".d2o"));
+
+    d2oFiles.map(file => {
+      const fileName = path.basename(file, ".d2o");
+      this.addReader(fileName);
+    });
+  }
+
+  /**
+   * Creates the D2oReader then maps the classes inside the .d2o to it.
+   * @private
+   * @static
+   * @param {string} fileName
+   * @returns {D2oReader}
+   * @memberof GameDataFileAccessor
+   */
+  private static addReader(fileName: string): void {
+    const d2oFilePath = path.join(this.d2oFilesPath, fileName + ".d2o");
+    const d2oReader = new D2oReader(d2oFilePath);
+    const classes = d2oReader.classes;
+
+    for (const { className } of classes.values()) {
+      if (this._ignoredClasses.includes(className)) {
+        continue;
       }
-      if (headers !== ANKAMA_SIGNED_FILE_HEADER) {
-        throw new Error("Malformated game data file.");
+      if (this._readers.has(className)) {
+        this._ignoredClasses.push(className);
+        this._readers.delete(className);
+      } else {
+        this._readers.set(className, d2oReader);
       }
-      entry._stream.readShort();
-      len = entry._stream.readInt();
-      entry._stream.position += len;
-      contentOffset = entry._stream.position;
-      entry._streamStartIndex = contentOffset + 7;
-      headers = entry._stream.readMultiByte(3, "ASCII");
-      if (headers !== "D2O") {
-        throw new Error("Malformated game data file.");
-      }
-    }
-    const indexesPointer = entry._stream.readInt();
-    entry._stream.position = contentOffset + indexesPointer;
-    const indexesLength = entry._stream.readInt();
-    let i = 0;
-    while (i < indexesLength) {
-      indexKey = entry._stream.readInt();
-      pointer = entry._stream.readInt();
-      entry._indexes[indexKey] = contentOffset + pointer;
-      entry._length++;
-      i += 8;
-    }
-    const classesCount = entry._stream.readInt();
-    let j = 0;
-    while (j < classesCount) {
-      classIdentifier = entry._stream.readInt();
-      this.readClassDefinition(key, classIdentifier, entry._stream);
-      j++;
     }
   }
 }

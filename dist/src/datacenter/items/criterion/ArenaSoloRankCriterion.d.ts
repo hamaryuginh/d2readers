@@ -1,0 +1,3 @@
+import ItemCriterion from "@datacenter/items/criterion/ItemCriterion";
+export default class ArenaSoloRankCriterion extends ItemCriterion {
+}

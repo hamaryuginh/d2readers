@@ -1,3 +1,5 @@
+import MonsterBonusCharacteristics from "@datacenter/monsters/MonsterBonusCharacteristics";
+
 export default class MonsterGrade {
   public grade: number;
   public monsterId: number;
@@ -21,4 +23,7 @@ export default class MonsterGrade {
   public intelligence: number;
   public chance: number;
   public agility: number;
+  public bonusRange: number;
+  public startingSpellId: number;
+  public bonusCharacteristics: MonsterBonusCharacteristics;
 }

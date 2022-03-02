@@ -1,3 +1,5 @@
+import MonsterDropCoefficient from "@datacenter/monsters/MonsterDropCoefficient";
+
 export default class MonsterDrop {
   public dropId: number;
   public monsterId: number;
@@ -8,5 +10,7 @@ export default class MonsterDrop {
   public percentDropForGrade4: number;
   public percentDropForGrade5: number;
   public count: number;
+  public criteria: string;
   public hasCriteria: boolean;
+  public specificDropCoefficient: MonsterDropCoefficient[];
 }

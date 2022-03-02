@@ -1,0 +1,30 @@
+import AmbientSound from "@datacenter/ambientSounds/AmbientSound";
+import Rectangle from "@datacenter/other/Rectangle";
+export default class SubArea {
+    static readonly MODULE: string;
+    id: number;
+    nameId: number;
+    areaId: number;
+    ambientSounds: AmbientSound[];
+    playlists: number[][];
+    mapIds: number[];
+    bounds: Rectangle;
+    shape: number[];
+    customWorldMap: number[];
+    packId: number;
+    level: number;
+    isConquestVillage: boolean;
+    basicAccountAllowed: boolean;
+    displayOnWorldMap: boolean;
+    mountAutoTripAllowed: boolean;
+    monsters: number[];
+    entranceMapIds: number[];
+    exitMapIds: number[];
+    capturable: boolean;
+    achievements: number[];
+    quests: number[][];
+    npcs: number[][];
+    exploreAchievementId: number;
+    isDiscovered: boolean;
+    harvestables: number[];
+}

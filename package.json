@@ -1,10 +1,14 @@
 {
   "name": "d2readers",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Dofus 2 Data Readers",
   "main": "dist/d2readers.min.js",
   "types": "dist/src/index.d.ts",
   "unpkg": "dist/d2readers.min.js",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "test": "mocha --reporter spec -r ts-node/register -r tsconfig-paths/register tests/**/*.test.ts",
     "lint": "tslint -p .",

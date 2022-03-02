@@ -11,4 +11,5 @@ export default class Area {
   public bounds: Rectangle;
   public worldmapId: number;
   public hasWorldMap: boolean;
+  public hasSuggestion: boolean;
 }

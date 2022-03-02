@@ -38,4 +38,5 @@ export default class Monster {
   public aggressiveLevelDiff: number;
   public aggressiveImmunityCriterion: string;
   public aggressiveAttackDelay: number;
+  public scaleGradeRef: number;
 }
